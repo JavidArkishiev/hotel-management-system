@@ -6,6 +6,7 @@ import com.example.apigateway.util.JWTService;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,19 +23,28 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory {
     @Override
     public GatewayFilter apply(Object config) {
         return (exchange, chain) -> {
+            ServerHttpRequest request = exchange.getRequest();
             if (validator.isSecured.test(exchange.getRequest())) {
-                String authHeaders = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-                if (authHeaders == null || !authHeaders.startsWith("Bearer ")) {
+                if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                     throw new RuntimeException(new InvalidTokenException("Missing or invalid authorization header"));
                 }
-                String token = authHeaders.substring(7);
+                String autHeaders = exchange.getRequest().getHeaders().get(HttpHeaders.AUTHORIZATION).get(0);
+                if (autHeaders != null && autHeaders.startsWith("Bearer ")) {
+                    autHeaders = autHeaders.substring(7);
+                }
                 try {
-                    jwtService.validate(token);
+                    jwtService.validate(autHeaders);
+
+                    request = exchange.getRequest()
+                            .mutate()
+                            .header("loggedInUser", jwtService.extractUsername(autHeaders))
+                            .build();
+
                 } catch (Exception e) {
                     throw new RuntimeException(new UnauthorizedException("Unauthorized access"));
                 }
             }
-            return chain.filter(exchange);
+            return chain.filter(exchange.mutate().request(request).build());
         };
     }
 

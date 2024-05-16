@@ -1,11 +1,13 @@
 package com.example.apigateway.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.util.function.Function;
 
 @Service
 public class JWTService {
@@ -18,6 +20,24 @@ public class JWTService {
     private Key getSignKey() {
         byte[] key = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(key);
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolvers.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
 
