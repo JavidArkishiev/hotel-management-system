@@ -35,7 +35,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory {
                 try {
                     jwtService.validate(autHeaders);
                     String role = jwtService.extractRole(autHeaders);
-                    if (validator.isSecuredAdmin.test(request) && !"ADMIN".equals(role)) {
+                    if (validator.hasAccessAdmin.test(request) && !"ADMIN".equals(role)) {
                         throw new UnauthorizedException("Unauthorized access: Admin role required");
                     }
                 } catch (Exception e) {

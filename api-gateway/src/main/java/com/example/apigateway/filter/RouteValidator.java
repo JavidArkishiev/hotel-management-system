@@ -20,14 +20,21 @@ public class RouteValidator {
             "notifications/verify"
     );
     public static final List<String> admin = List.of(
-            "customer/{id}"
+            "customer/{id}",
+            "customer",
+            "address",
+            "price",
+            "price/{roomId}",
+            "price/{id}",
+            "room",
+            "room/update-room/{id}"
     );
 
     public Predicate<ServerHttpRequest> isSecured =
             request -> openApiEndPoint
                     .stream()
                     .noneMatch(uri -> request.getURI().getPath().contains(uri));
-    public Predicate<ServerHttpRequest> isSecuredAdmin =
+    public Predicate<ServerHttpRequest> hasAccessAdmin =
             request -> admin
                     .stream()
                     .anyMatch(uri -> request.getURI().getPath().contains(uri));
