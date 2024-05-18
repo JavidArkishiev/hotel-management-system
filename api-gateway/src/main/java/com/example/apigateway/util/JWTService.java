@@ -1,6 +1,9 @@
 package com.example.apigateway.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -20,6 +23,20 @@ public class JWTService {
     private Key getSignKey() {
         byte[] key = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(key);
+    }
+
+    public String extractRole(String jwtToken) {
+        Jws<Claims> claimsJws = Jwts.parser().setSigningKey(secret).parseClaimsJws(jwtToken);
+
+        Claims body = claimsJws.getBody();
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode roleNode = objectMapper.convertValue(body.get("role"), JsonNode.class);
+
+        if (roleNode != null && roleNode.isArray() && roleNode.size() > 0) {
+            return roleNode.get(0).get("authority").asText();
+        } else {
+            return "USER";
+        }
     }
 
     public String extractUsername(String token) {
