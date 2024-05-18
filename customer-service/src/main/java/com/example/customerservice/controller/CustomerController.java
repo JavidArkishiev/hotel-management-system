@@ -28,9 +28,7 @@ public class CustomerController {
     }
 
     @GetMapping("{customerId}")
-    public ResponseEntity<CustomerResponseDto> getCustomerById(@RequestParam Long customerId,
-                                                               @RequestHeader("loggedInUser") String userName) {
-        System.out.println("loggedInUser  " + userName);
+    public ResponseEntity<CustomerResponseDto> getCustomerById(@RequestParam Long customerId) {
         return new ResponseEntity<>(customerService.getCustomerById(customerId), HttpStatus.OK);
 
     }

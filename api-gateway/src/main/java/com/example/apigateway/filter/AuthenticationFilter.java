@@ -34,14 +34,14 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory {
                 }
                 try {
                     jwtService.validate(autHeaders);
-
-                    request = exchange.getRequest()
-                            .mutate()
-                            .header("loggedInUser", jwtService.extractUsername(autHeaders))
-                            .build();
-
+                    String role = jwtService.extractRole(autHeaders);
+                    if (validator.isSecuredAdmin.test(request) && !"ADMIN".equals(role)) {
+                        throw new UnauthorizedException("Unauthorized access: Admin role required");
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(new UnauthorizedException("Unauthorized access"));
+                } catch (UnauthorizedException e) {
+                    throw new RuntimeException(e);
                 }
             }
             return chain.filter(exchange.mutate().request(request).build());

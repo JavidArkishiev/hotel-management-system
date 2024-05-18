@@ -19,10 +19,17 @@ public class RouteValidator {
             "notifications/send-signUp-notification",
             "notifications/verify"
     );
+    public static final List<String> admin = List.of(
+            "customer/{id}"
+    );
 
     public Predicate<ServerHttpRequest> isSecured =
             request -> openApiEndPoint
                     .stream()
                     .noneMatch(uri -> request.getURI().getPath().contains(uri));
+    public Predicate<ServerHttpRequest> isSecuredAdmin =
+            request -> admin
+                    .stream()
+                    .anyMatch(uri -> request.getURI().getPath().contains(uri));
 
 }
